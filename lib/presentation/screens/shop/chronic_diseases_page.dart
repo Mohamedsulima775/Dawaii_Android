@@ -1,8 +1,9 @@
 
 // lib/features/shop/presentation/pages/chronic_diseases_page.dart
 
+/*
 import 'package:flutter/material.dart';
-import 'category_card.dart';
+import 'base_category_screen.dart';
 
 
 class ChronicDiseasesScreen extends StatelessWidget {
@@ -290,4 +291,144 @@ class DiseaseCategory {
     required this.iconColor,
     required this.description,
   });
+}
+
+ */
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dawaii/data/models/category_item.dart'; // الموديل الموحد
+import '../widgets/category_card.dart'; // الـ Widget الموحد
+
+class ChronicDiseasesScreen extends StatelessWidget {
+  const ChronicDiseasesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // استخدمنا CategoryItem لتوحيد البيانات مع بقية التطبيق
+    final List<CategoryItem> diseases = [
+      CategoryItem(
+        id: 'diabetes',
+        name: 'Diabetes',
+        nameAr: 'السكري',
+        icon: Icons.water_drop,
+        color: const Color(0xFF2196F3),
+      ),
+      CategoryItem(
+        id: 'hypertension',
+        name: 'Hypertension',
+        nameAr: 'ضغط الدم',
+        icon: Icons.favorite,
+        color: const Color(0xFFF44336),
+      ),
+      CategoryItem(
+        id: 'asthma',
+        name: 'Asthma',
+        nameAr: 'الربو',
+        icon: Icons.air,
+        color: const Color(0xFF4CAF50),
+      ),
+      CategoryItem(
+        id: 'heart',
+        name: 'Heart Disease',
+        nameAr: 'أمراض القلب',
+        icon: Icons.monitor_heart,
+        color: const Color(0xFFE91E63),
+      ),
+      CategoryItem(
+        id: 'cholesterol',
+        name: 'Cholesterol',
+        nameAr: 'الكوليسترول',
+        icon: Icons.bloodtype,
+        color: const Color(0xFFFF9800),
+      ),
+      CategoryItem(
+        id: 'thyroid',
+        name: 'Thyroid',
+        nameAr: 'الغدة الدرقية',
+        icon: Icons.science,
+        color: const Color(0xFF009688),
+      ),
+    ];
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => context.pop(), // استخدام GoRouter
+        ),
+        title: const Text(
+          'Chronic Diseases',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Header القسم العلوي
+          _buildHeader(),
+
+          // شبكة الأمراض المزمنة باستخدام الـ Widget الموحد
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.8, // تناسب مع الكرت الجديد
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: diseases.length,
+              itemBuilder: (context, index) {
+                return CategoryCard(
+                  category: diseases[index],
+                  onTap: () {
+                    // الانتقال لصفحة المنتجات الخاصة بهذا المرض
+                    context.push('/shop/products?category=${diseases[index].id}');
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.medical_services, color: Colors.blue),
+          ),
+          const SizedBox(width: 16),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('أدوية الأمراض المزمنة',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('اختر نوع المرض لعرض المنتجات',
+                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

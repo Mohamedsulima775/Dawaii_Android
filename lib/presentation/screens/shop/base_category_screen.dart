@@ -1,64 +1,6 @@
+
 /*
-import 'package:flutter/material.dart';
-
-class CategoryCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color? color;
-
-  const CategoryCard({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.onTap,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final categoryColor = color ?? Theme.of(context).colorScheme.primary;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: categoryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: categoryColor.withOpacity(0.3),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 40,
-              color: categoryColor,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: categoryColor,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
- */
+//category_screen
 
 // lib/features/shop/presentation/pages/category_products_page.dart
 
@@ -591,6 +533,8 @@ class _CategoryProductsPageState extends State<CategoryCard > {
   }
 }
 
+ */
+
 /*
 // Product Model
 class Product {
@@ -617,4 +561,127 @@ class Product {
  */
 
 
+/*
+import 'package:dawaii/presentation/screens/shop/product_card.dart';
+import 'package:flutter/material.dart';
+import '../../../data/models/category_item.dart';
+import '../../../data/models/product.dart';
+import '../widgets/category_card.dart';
+//import '../shop/product_card.dart';
 
+
+
+class BaseCategoryScreen extends StatelessWidget {
+  final String title;
+  final Color primaryColor;
+  final List<CategoryItem>? categories;
+  final List<Product>? products;
+
+  const BaseCategoryScreen({
+    super.key,
+    required this.title,
+    required this.primaryColor,
+    this.categories,
+    this.products,
+  }) : assert(categories != null || products != null, 'يجب تمرير Categories أو Products');
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: categories != null
+            ? GridView.builder(
+          itemCount: categories!.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.85),
+          itemBuilder: (context, index) {
+            final category = categories![index];
+            return CategoryCard(
+              category: category,
+              onTap: () {
+                // Navigate to products page or API data
+              },
+            );
+          },
+        )
+            : GridView.builder(
+          itemCount: products!.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.68),
+          itemBuilder: (context, index) {
+            final product = products![index];
+            return ProductCard(
+              product: product,
+              onTap: () {},
+              onAddToCart: () {},
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+ */
+
+// lib/presentation/screens/shop/base_category_screen.dart
+
+import 'package:dawaii/presentation/screens/shop/product_card.dart';
+import 'package:flutter/material.dart';
+import '../../../data/models/category_item.dart';
+import '../../../data/models/product.dart';
+import '../widgets/category_card.dart';
+
+class BaseCategoryScreen extends StatelessWidget {
+  final String title;
+  final List<CategoryItem>? categories;
+  final List<Product>? products;
+
+  const BaseCategoryScreen({
+    super.key,
+    required this.title,
+    this.categories,
+    this.products,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        // إذا كانت هناك فئات، استخدم تصميمها، وإذا كانت منتجات استخدم تصميمها
+        itemCount: categories?.length ?? products?.length ?? 0,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: categories != null ? 0.85 : 0.65, // تغيير النسبة حسب المحتوى
+        ),
+        itemBuilder: (context, index) {
+          if (categories != null) {
+            return CategoryCard(
+              category: categories![index],
+              onTap: () { /* انتقال لقسم المنتجات */ },
+            );
+          } else {
+            return ProductCard(
+              product: products![index],
+              onTap: () { /* انتقال لتفاصيل المنتج */ },
+              onAddToCart: () { /* إضافة للسلة */ },
+            );
+          }
+        },
+      ),
+    );
+  }
+}

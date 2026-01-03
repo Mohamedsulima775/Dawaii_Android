@@ -4,24 +4,27 @@ class Product {
   final String itemName;
   final String? description;
   final double price;
-   //final bool inStock;
+   final bool inStock;
   final int stock;
   final String? category;
   final String? image;
   final List<String>? images;
   final double? rating;
   final int? reviewsCount;
+   final String? imageUrl;
+
 
   Product({
-    //this.id,
+
    required this.id,
     this.name,
     required this.itemName,
     this.description,
     required this.price,
     required this.stock,
-    //required this.inStock,
+    required this.inStock,
     this.category,
+    this.imageUrl,
     this.image,
     this.images,
     this.rating,
@@ -40,8 +43,9 @@ class Product {
       images: json['images'] != null ? List<String>.from(json['images']) : null,
       rating: json['rating']?.toDouble(),
       reviewsCount: json['reviews_count'], id: '',
+      inStock:true,
     );
   }
 
-  bool get inStock => stock > 0;
+  bool get iStock => stock > 0;
 }

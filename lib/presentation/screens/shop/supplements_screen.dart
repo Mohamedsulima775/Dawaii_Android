@@ -24,6 +24,7 @@ class SupplementsScreen extends StatelessWidget {
 
  */
 
+/*
 import 'package:flutter/material.dart';
 
 // ============================================
@@ -796,3 +797,378 @@ class SupplementProduct {
     this.isFavorite = false,
   });
 }
+
+ */
+
+// المعتمد
+
+// المعتمد
+/*
+// المعتمد
+import 'package:dawaii/presentation/screens/shop/product_card.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dawaii/data/models/product.dart';
+import 'package:dawaii/data/models/category_item.dart';
+
+
+class SupplementsScreen extends StatefulWidget {
+  const SupplementsScreen({super.key});
+
+  @override
+  State<SupplementsScreen> createState() => _SupplementsPageState();
+}
+
+class _SupplementsPageState extends State<SupplementsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String _selectedGoalId = 'all';
+
+  // توحيد الأهداف باستخدام CategoryItem
+  final List<CategoryItem> _goals = [
+    CategoryItem(id: 'all', name: 'All', nameAr: 'الكل', icon: Icons.apps, color: Colors.grey),
+    CategoryItem(id: 'muscle', name: 'Muscle', nameAr: 'بناء العضلات', icon: Icons.fitness_center, color: Colors.red),
+    CategoryItem(id: 'energy', name: 'Energy', nameAr: 'الطاقة', icon: Icons.bolt, color: Colors.orange),
+    CategoryItem(id: 'weight', name: 'Weight', nameAr: 'إنقاص الوزن', icon: Icons.trending_down, color: Colors.green),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF2D6A4F);
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 200,
+              pinned: true,
+              backgroundColor: primaryColor,
+              flexibleSpace: FlexibleSpaceBar(
+                title: const Text('المكملات الغذائية', style: TextStyle(fontWeight: FontWeight.bold)),
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF1B4332), Color(0xFF2D6A4F)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Icon(Icons.fitness_center, size: 150, color: Colors.white.withOpacity(0.1)),
+                ),
+              ),
+              bottom: TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                tabs: const [
+                  Tab(text: 'بروتين'),
+                  Tab(text: 'فيتامينات'),
+                  Tab(text: 'أمينو'),
+                  Tab(text: 'أخرى'),
+                ],
+              ),
+            ),
+          ];
+        },
+        body: Column(
+          children: [
+            // فلتر الأهداف (Goals)
+            _buildGoalsFilter(),
+
+            // عرض المنتجات بناءً على التبويب المختار
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildProductsGrid('protein'),
+                  _buildProductsGrid('vitamins'),
+                  _buildProductsGrid('amino'),
+                  _buildProductsGrid('other'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalsFilter() {
+    return Container(
+      height: 90,
+      color: Colors.white,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: _goals.length,
+        itemBuilder: (context, index) {
+          final goal = _goals[index];
+          final isSelected = _selectedGoalId == goal.id;
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedGoalId = goal.id),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isSelected ? goal.color : Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isSelected ? goal.color : Colors.grey[300]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(goal.icon, color: isSelected ? Colors.white : goal.color, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    goal.nameAr ?? goal.name,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProductsGrid(String type) {
+    // توليد بيانات تجريبية تتوافق مع موديل Product الخاص بك
+    final products = List.generate(4, (index) => Product(
+      id: 'sup_${type}_$index',
+      itemName: index == 0 ? 'Whey Protein Gold' : 'BCAA Energy',
+      price: 250.0 + (index * 20),
+      stock: 5,
+      inStock: true,
+      imageUrl: 'https://via.placeholder.com/150',
+    ));
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.65,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        return ProductCard(
+          product: products[index],
+          onTap: () => context.push('/shop/product/${products[index].id}'),
+          onAddToCart: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تمت الإضافة للسلة'), behavior: SnackBarBehavior.floating),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+ */
+
+
+
+import 'package:dawaii/presentation/screens/shop/product_card.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dawaii/data/models/product.dart';
+import 'package:dawaii/data/models/category_item.dart';
+
+class SupplementsScreen extends StatefulWidget {
+  const SupplementsScreen({super.key});
+
+  @override
+  State<SupplementsScreen> createState() => _SupplementsPageState();
+}
+
+class _SupplementsPageState extends State<SupplementsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String _selectedGoalId = 'all';
+
+  // قائمة الأهداف الفرعية (بناء العضلات، الطاقة...)
+  final List<CategoryItem> _goals = [
+    CategoryItem(id: 'all', name: 'All', nameAr: 'الكل', icon: Icons.grid_view, color: Colors.grey),
+    CategoryItem(id: 'muscle', name: 'Muscle', nameAr: 'بناء العضلات', icon: Icons.fitness_center, color: Colors.red),
+    CategoryItem(id: 'energy', name: 'Energy', nameAr: 'الطاقة', icon: Icons.bolt, color: Colors.orange),
+    CategoryItem(id: 'weight', name: 'Weight', nameAr: 'إنقاص الوزن', icon: Icons.trending_down, color: Colors.green),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF2D6A4F);
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50], // خلفية الصفحة رمادي خفيف جداً
+      appBar: AppBar(
+        title: const Text('المكملات الغذائية', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // 1. شريط الـ TabBar المستقل تماماً (خارج الـ AppBar)
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // لون خلفية أبيض ليفصله عن الـ AppBar الأخضر
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4), // ظل ليعطي إحساس بالانفصال
+                ),
+              ],
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: primaryColor,
+              indicatorWeight: 3,
+              labelColor: primaryColor, // لون النص المختار
+              unselectedLabelColor: Colors.grey[600], // لون النص غير المختار
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              tabs: const [
+                Tab(text: 'بروتين'),
+                Tab(text: 'فيتامينات'),
+                Tab(text: 'أمينو'),
+                Tab(text: 'أخرى'),
+              ],
+            ),
+          ),
+
+          // 2. شريط الأهداف (الذي يحتوي على الكل، بناء العضلات...)
+          _buildGoalsFilter(),
+
+          // 3. عرض المنتجات (يتأثر بالـ TabBar)
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildProductsGrid('protein'),
+                _buildProductsGrid('vitamins'),
+                _buildProductsGrid('amino'),
+                _buildProductsGrid('other'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ويدجت شريط الأهداف الأفقي
+  Widget _buildGoalsFilter() {
+    return Container(
+      height: 85,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _goals.length,
+        itemBuilder: (context, index) {
+          final goal = _goals[index];
+          final isSelected = _selectedGoalId == goal.id;
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedGoalId = goal.id),
+            child: Container(
+              margin: const EdgeInsets.only(left: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              decoration: BoxDecoration(
+                // لون رمادي غامق عند الاختيار كما في الصورة المطلوبة
+                color: isSelected ? Colors.grey[600] : Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: isSelected ? Colors.grey[600]! : Colors.grey[300]!,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                      goal.icon,
+                      color: isSelected ? Colors.white : Colors.red[400],
+                      size: 20
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    goal.nameAr ?? goal.name,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ويدجت شبكة المنتجات
+  Widget _buildProductsGrid(String type) {
+    // محاكاة لبيانات المنتجات بناءً على الموديل الخاص بك
+    final List<Product> products = List.generate(4, (index) => Product(
+      id: 'sup_${type}_$index',
+      itemName: index % 2 == 0 ? 'Whey Protein Gold' : 'Omega 3 Vitamins',
+      price: 150.0 + (index * 25),
+      stock: 10,
+      inStock: true,
+      imageUrl: 'https://via.placeholder.com/150',
+    ));
+
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.7, // نسبة العرض للطول للكرت
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        return ProductCard(
+          product: products[index],
+          onTap: () => context.push('/shop/product/${products[index].id}'),
+          onAddToCart: () {
+            // منطق إضافة للسلة
+          },
+        );
+      },
+    );
+  }
+}
+

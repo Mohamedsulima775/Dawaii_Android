@@ -1,31 +1,5 @@
 
 /*
-
-// التجريبي
-import 'package:flutter/material.dart';
-
-import '../widgets/base_category_screen.dart';
-
-class WellnessScreen extends StatelessWidget {
-  const WellnessScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BaseCategoryScreen(
-      title: 'Wellness & Care',
-      primaryColor: Colors.green,
-      items: [
-        {'name': 'Skin Care', 'icon': Icons.face, 'desc': 'Healthy glow'},
-        {'name': 'Hair Care', 'icon': Icons.content_cut, 'desc': 'Strong hair'},
-        {'name': 'Personal Care', 'icon': Icons.clean_hands, 'desc': 'Daily hygiene'},
-        {'name': 'First Aid', 'icon': Icons.medical_services, 'desc': 'Safety first'},
-      ],
-    );
-  }
-}
-
- */
-
 import 'package:flutter/material.dart';
 
 // ============================================
@@ -757,4 +731,156 @@ class WellnessProduct {
     this.usage,
     this.imageUrl,
   });
+}
+
+ */
+
+// المعتمد
+
+
+import 'package:dawaii/presentation/screens/shop/product_card.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dawaii/data/models/product.dart';
+import 'package:dawaii/data/models/category_item.dart';
+import '../widgets/category_card.dart';
+
+class WellnessScreen extends StatefulWidget {
+  const WellnessScreen({super.key});
+
+  @override
+  State<WellnessScreen> createState() => _WellnessPageState();
+}
+
+class _WellnessPageState extends State<WellnessScreen> {
+  final List<CategoryItem> _categories = [
+    CategoryItem(id: 'vitamins', name: 'Vitamins', nameAr: 'الفيتامينات', icon: Icons.medication, color: Colors.orange),
+    CategoryItem(id: 'skincare', name: 'Skin Care', nameAr: 'العناية بالبشرة', icon: Icons.spa, color: Colors.pink),
+    CategoryItem(id: 'haircare', name: 'Hair Care', nameAr: 'العناية بالشعر', icon: Icons.face, color: Colors.purple),
+    CategoryItem(id: 'fitness', name: 'Fitness', nameAr: 'اللياقة البدنية', icon: Icons.fitness_center, color: Colors.green),
+  ];
+
+  String _selectedCategoryId = 'vitamins';
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF2D6A4F);
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('العافية والصحة', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0, // جعل الـ AppBar مسطحاً ليندمج مع الـ Header
+        actions: [
+          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+        ],
+      ),
+      body: Column(
+        children: [
+          // 1. Header المميز الخاص بالصفحة
+          _buildHeader(),
+
+          // 2. قائمة الفئات الأفقية - تم تعديل الارتفاع هنا لحل مشكلة الـ Overflow
+          Container(
+            height: 155, // زيادة الارتفاع من 130 إلى 145 لضمان ظهور المربعات والنصوص
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = _selectedCategoryId == category.id;
+
+                return Padding(
+                  padding: const EdgeInsets.only(left: 15), // تعديل الـ padding لليمن/اليسار حسب الاتجاه
+                  child: AnimatedOpacity( // استخدام تحريك سلس عند الاختيار
+                    duration: const Duration(milliseconds: 300),
+                    opacity: isSelected ? 1.0 : 0.5,
+                    child: CategoryCard(
+                      category: category,
+                      onTap: () => setState(() => _selectedCategoryId = category.id),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // 3. قائمة المنتجات
+          Expanded(
+            child: _buildProductsGrid(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF2D6A4F), Color(0xFF52B788)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      // تقليل الـ padding لتقليل المساحة الكلية للهيدر
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: const Center( // جعل النص في المنتصف ليعطي مظهراً أرشق
+        child: Text(
+          '  🌿     اكتشف أفضل منتجات العافية والعناية الذاتية',
+          style: TextStyle(
+              color: Colors.white, // تغيير اللون للأبيض الصافي ليكون أوضح بعد حذف العنوان الكبير
+              fontSize: 14,
+              fontWeight: FontWeight.w500
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductsGrid() {
+    final List<Product> products = List.generate(6, (index) => Product(
+      id: 'w_$index',
+      itemName: 'منتج صحي $index',
+      price: 45.0 + (index * 5),
+      stock: 10,
+      inStock: true,
+      imageUrl: 'https://via.placeholder.com/150',
+    ));
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.68,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        return ProductCard(
+          product: products[index],
+          onTap: () => context.push('/shop/product/${products[index].id}'),
+          onAddToCart: () {},
+        );
+      },
+    );
+  }
 }
