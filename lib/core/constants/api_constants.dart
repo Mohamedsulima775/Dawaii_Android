@@ -38,13 +38,17 @@ class ApiConstants {
   // ==========================================
 
   // Development
-  static const String devBaseUrl = 'http://localhost:8000';
+  // WARNING: Using HTTP in development is insecure. Passwords and sensitive data
+  // will be transmitted in plaintext. Use HTTPS even for local development.
+  // To use HTTPS locally: Set up a reverse proxy (nginx) or use ngrok/localtunnel
+  static const String devBaseUrl = 'https://localhost:8000';
 
   // Production
   static const String prodBaseUrl = 'https://dawaii.com';
 
   // Current base URL (change based on environment)
-  static const String baseUrl = devBaseUrl;
+  // SECURITY: Default to production URL (HTTPS). Only use devBaseUrl in local development.
+  static const String baseUrl = prodBaseUrl;
 
   // API base path
   static const String apiPath = '/api/method';
