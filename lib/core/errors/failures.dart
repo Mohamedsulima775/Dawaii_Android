@@ -1,53 +1,5 @@
 
 // domain/failures/failure.dart
-/*
-// الاول
-import 'package:equatable/equatable.dart';
-
-/// Base Failure class
-abstract class Failure extends Equatable {
-  final String message;
-  final int? code;
-
-  const Failure(this.message, [this.code]);
-
-  @override
-  List<Object?> get props => [message, code];
-}
-
-/// Server Failure
-class ServerFailure extends Failure {
-  const ServerFailure(String message, [int? code]) : super(message, code);
-}
-
-/// Network Failure
-class NetworkFailure extends Failure {
-  const NetworkFailure(String message) : super(message);
-}
-
-/// Cache Failure
-class CacheFailure extends Failure {
-  const CacheFailure(String message) : super(message);
-}
-
-/// Validation Failure
-class ValidationFailure extends Failure {
-  const ValidationFailure(String message) : super(message);
-}
-
-/// Authentication Failure
-class AuthenticationFailure extends Failure {
-  const AuthenticationFailure(String message) : super(message);
-}
-
-/// Unknown Failure
-class UnknownFailure extends Failure {
-  const UnknownFailure(String message) : super(message);
-}
-
- */
-
-// lib/core/errors/failures.dart
 
 import 'package:equatable/equatable.dart';
 
@@ -92,6 +44,10 @@ class ServerFailure extends Failure {
     }
     return ServerFailure(exception.toString());
   }
+}
+
+class UnexpectedFailure extends Failure {
+  const   UnexpectedFailure([super.message = 'حدث خطأ غير متوقع']);
 }
 
 /// Failure for bad request (400)
@@ -396,6 +352,8 @@ class UnknownFailure extends Failure {
     String message = 'حدث خطأ غير متوقع',
   ]) : super(message);
 }
+
+
 
 // ==========================================
 // HELPER FUNCTIONS

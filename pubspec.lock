@@ -421,6 +421,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  foundation:
+    dependency: "direct dev"
+    description:
+      name: foundation
+      sha256: "6f1fda07bd2a422145724b0f94ee68fabac95fabff982d5f334fe1a38cbed6a7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
   freezed:
     dependency: "direct dev"
     description:
@@ -1138,6 +1146,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  url_image:
+    dependency: "direct dev"
+    description:
+      name: url_image
+      sha256: f933d3d71fecd5d8016dafc128be15b4431dc3007421b31e435e50b143004659
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   url_launcher:
     dependency: "direct dev"
     description:

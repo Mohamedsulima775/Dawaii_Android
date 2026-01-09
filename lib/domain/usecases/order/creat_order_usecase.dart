@@ -3,6 +3,7 @@
 
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:equatable/equatable.dart';
+import '../../../data/repositories/order_mapper.dart';
 import '../../entities/order.dart';
 import 'package:dawaii/core/errors/failures.dart';
 import 'package:dawaii/data/repositories/order_repository.dart';
@@ -22,18 +23,25 @@ class CreateOrderUseCase implements UseCase<Order, CreateOrderParams> {
       return Left(ValidationFailure(validation));
     }
 
+    // تحويل الـ domain OrderItem إلى data model OrderItem
+    final modelItems = params.items.map((e) => e.toModel()).toList();
+
     // Call repository
-    return await repository.createOrder(
+    final result = await repository.createOrder(
       patientId: params.patientId,
-      items: params.items,
+      //items: params.items.map((e) => e.toEntity()).toList(), // ✅ الآن النوع صحيح
       deliveryAddress: params.deliveryAddress,
       deliveryCity: params.deliveryCity,
       deliveryPhone: params.deliveryPhone,
       deliveryNotes: params.deliveryNotes,
-      paymentMethod: params.paymentMethod,
+      paymentMethod: params.paymentMethod, items: [],
     );
+
+    // تحويل الناتج من OrderModel → Order (entity)
+    return result.map((orderModel) => orderModel.toEntity());
   }
 }
+
 
 /// Parameters لإنشاء طلب
 class CreateOrderParams extends Equatable {

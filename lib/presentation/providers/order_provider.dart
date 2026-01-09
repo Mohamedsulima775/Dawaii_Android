@@ -1,17 +1,15 @@
 
+// order_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dawaii/data/models/order_model.dart';
+import '../../data/models/order_model.dart';
+import '../../data/models/cart_item_model.dart';
+import '../../data/repositories/order_repository.dart';
 import '../../data/repositories/order_repositoryImpl.dart';
-import 'package:dawaii/data/models/cart_item_model.dart';
-import 'package:dawaii/data/repositories/order_repository.dart';
 import '../../core/network/api_client.dart';
 import 'package:dawaii/data/repositories/order_mapper.dart';
-
 import '../../domain/entities/order.dart';
-
-
 // ============================================
-// State
+// State: يعتمد الآن كلياً على الـ Models
 // ============================================
 
 class OrderState {
@@ -51,13 +49,12 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return OrderRepositoryImpl(apiClient: apiClient);
 });
 
-final orderProvider =
-StateNotifierProvider<OrderNotifier, OrderState>((ref) {
+final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {
   return OrderNotifier(ref.read(orderRepositoryProvider));
 });
 
 // ============================================
-// Notifier
+// Notifier: يتعامل مع الـ Models مباشرة دون Mapper
 // ============================================
 
 class OrderNotifier extends StateNotifier<OrderState> {
@@ -65,60 +62,34 @@ class OrderNotifier extends StateNotifier<OrderState> {
 
   OrderNotifier(this._repository) : super(const OrderState());
 
-  // Load Orders
-  Future<void> loadOrders({
-    required String patientId,
-    OrderStatus? status,
-  }) async {
+  // جلب الطلبات مباشرة كموديلات
+  Future<void> loadOrders({required String patientId, String? status}) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.getOrders(
-      patientId: patientId,
-      status: status,
-    );
+    final result = await _repository.getOrders(patientId: patientId, status: status);
 
     result.fold(
-          (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
-      },
-          (orders) {
-        state = state.copyWith(
-          isLoading: false,
-          orders: orders.map((e) => e.toModel()).toList(),
-        );
-      },
+          (failure) => state = state.copyWith(isLoading: false, error: failure.message),
+          (orders) => state = state.copyWith(isLoading: false, orders: orders), // الارتباط المباشر هنا
     );
   }
 
-  // Load Order Detail
+  // جلب تفاصيل الطلب مباشرة كموديل
   Future<void> loadOrderDetail(String orderId) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getOrderById(orderId);
 
     result.fold(
-          (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
-      },
-          (order) {
-        state = state.copyWith(
-          isLoading: false,
-          currentOrder: order.toModel(),
-        );
-      },
+          (failure) => state = state.copyWith(isLoading: false, error: failure.message),
+          (order) => state = state.copyWith(isLoading: false, currentOrder: order),
     );
   }
 
-  // Create Order
+  // إنشاء الطلب باستخدام بيانات السلة مباشرة
   Future<void> createOrder({
     required String patientId,
-    required List<CartItemModel> items,
+    required List<CartItemModel> items, // استخدام الموديل القادم من السلة مباشرة
     required String deliveryAddress,
     String? deliveryCity,
     String? deliveryPhone,
@@ -126,28 +97,31 @@ class OrderNotifier extends StateNotifier<OrderState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
+    // تحويل عناصر السلة إلى عناصر طلب بشكل مباشر وسريع
+    final orderItems = items.map((e) => OrderItem(
+      itemCode: e.itemCode,
+      itemName: e.itemName,
+      quantity: e.quantity,
+      price: e.price,
+    )).toList();
+
     final result = await _repository.createOrder(
       patientId: patientId,
-      items: items.map((e) => e.toEntity()).toList(),
+      items: orderItems,
       deliveryAddress: deliveryAddress,
       deliveryCity: deliveryCity,
       deliveryPhone: deliveryPhone,
       deliveryNotes: deliveryNotes,
+      paymentMethod: 'cash_on_delivery',
     );
 
     result.fold(
-          (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
-      },
+          (failure) => state = state.copyWith(isLoading: false, error: failure.message),
           (order) {
-        final model = order.toModel();
         state = state.copyWith(
           isLoading: false,
-          currentOrder: model,
-          orders: [model, ...state.orders],
+          currentOrder: order,
+          orders: [order, ...state.orders],
         );
       },
     );

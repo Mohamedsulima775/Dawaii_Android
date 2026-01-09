@@ -2,12 +2,14 @@
 
 import 'package:dartz/dartz.dart' hide  Order;
 import 'package:equatable/equatable.dart';
+import '../../../data/repositories/order_mapper.dart';
 import '../../entities/order.dart';
 import 'package:dawaii/core/errors/failures.dart';
 import 'package:dawaii/data/repositories/order_repository.dart';
 import '../usecase.dart';
 
 /// UseCase للحصول على تفاصيل طلب معين
+
 class GetOrderByIdUseCase implements UseCase<Order, GetOrderByIdParams> {
   final OrderRepository repository;
 
@@ -22,7 +24,10 @@ class GetOrderByIdUseCase implements UseCase<Order, GetOrderByIdParams> {
     }
 
     // Call repository
-    return await repository.getOrderById(params.orderId);
+    final result = await repository.getOrderById(params.orderId);
+
+    // تحويل OrderModel → Order (entity)
+    return result.map((orderModel) => orderModel.toEntity());
   }
 }
 

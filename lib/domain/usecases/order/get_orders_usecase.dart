@@ -2,6 +2,7 @@
 
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:equatable/equatable.dart';
+import '../../../data/repositories/order_mapper.dart';
 import '../../entities/order.dart';
 import 'package:dawaii/core/errors/failures.dart';
 import 'package:dawaii/data/repositories/order_repository.dart';
@@ -22,22 +23,26 @@ class GetOrdersUseCase implements UseCase<List<Order>, GetOrdersParams> {
     }
 
     // Call repository
-    return await repository.getOrders(
+    final result = await repository.getOrders(
       patientId: params.patientId,
-      status: params.status,
+      status: params.status?.name,
+    );
+
+    // تحويل List<OrderModel> → List<Order> (entities)
+    return result.map(
+          (orderModels) => orderModels.map((e) => e.toEntity()).toList(),
     );
   }
 }
 
+/// Parameters للحصول على كل الطلبات
+
 /// Parameters للحصول على الطلبات
 class GetOrdersParams extends Equatable {
   final String patientId;
-  final OrderStatus? status;
+  final OrderStatus? status;// حسب API، يمكن أن يكون OrderStatus.name أو String
 
-  const GetOrdersParams({
-    required this.patientId,
-    this.status,
-  });
+  const GetOrdersParams({required this.patientId, this.status,});
 
   /// Validate inputs
   String? validate() {

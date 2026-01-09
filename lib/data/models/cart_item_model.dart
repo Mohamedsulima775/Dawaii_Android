@@ -24,4 +24,25 @@ class CartItemModel {
   }
 
   double get total => quantity * price;
+
+  Map<String, dynamic> toJson() => {
+    'item_code': itemCode,
+    'item_name': itemName,
+    'quantity': quantity,
+    'rate': price,
+    'image_url': imageUrl,
+  };
+
+  CartItemModel copyWith({
+    int? quantity,
+  }) {
+    return CartItemModel(
+      itemCode: itemCode,
+      itemName: itemName,
+      quantity: quantity ?? this.quantity,
+      price: price,
+      imageUrl: imageUrl,
+    );
+  }
+
 }

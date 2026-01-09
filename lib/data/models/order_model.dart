@@ -1,6 +1,208 @@
+// التعديل للربط
+
+// lib/data/models/order_model.dart
+
 import 'cart_item_model.dart';
 
+class OrderModel {
+  final String orderId;
+  final String patientId;
+  final String patientName;
+  final List<CartItemModel> items;
+  final double totalAmount;
+  final String status;
+  final String deliveryAddress;
+  final String deliveryCity;
+  final String deliveryPhone;
+  final String paymentMethod;
+  final String? trackingNumber;
+  final String? courierName;
+  final String? courierPhone;
+  final int? rating;
+  final DateTime createdAt;
 
+  OrderModel({
+    required this.orderId,
+    required this.patientId,
+    required this.patientName,
+    required this.items,
+    required this.totalAmount,
+    required this.status,
+    required this.deliveryAddress,
+    required this.deliveryCity,
+    required this.deliveryPhone,
+    required this.paymentMethod,
+    this.trackingNumber,
+    this.courierName,
+    this.courierPhone,
+    this.rating,
+    required this.createdAt,
+  });
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      orderId: json['order_id'] ?? json['name'] ?? '',
+      patientId: json['patient_id'] ?? '',
+      patientName: json['patient_name'] ?? '',
+      items: (json['items'] as List? ?? [])
+          .map((e) => CartItemModel.fromJson(e))
+          .toList(),
+      totalAmount: (json['total_amount'] ?? 0).toDouble(),
+      status: json['status'] ?? '',
+      deliveryAddress: json['delivery_address'] ?? '',
+      deliveryCity: json['delivery_city'] ?? '',
+      deliveryPhone: json['delivery_phone'] ?? '',
+      paymentMethod: json['payment_method'] ?? '',
+      trackingNumber: json['tracking_number'],
+      courierName: json['courier_name'],
+      courierPhone: json['courier_phone'],
+      rating: json['order_rating'],
+      createdAt:
+      DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  OrderModel copyWith({
+    String? status,
+    int? rating,
+    String? trackingNumber,
+  }) {
+    return OrderModel(
+      orderId: orderId,
+      patientId: patientId,
+      patientName: patientName,
+      items: items,
+      totalAmount: totalAmount,
+      status: status ?? this.status,
+      deliveryAddress: deliveryAddress,
+      deliveryCity: deliveryCity,
+      deliveryPhone: deliveryPhone,
+      paymentMethod: paymentMethod,
+      trackingNumber: trackingNumber ?? this.trackingNumber,
+      courierName: courierName,
+      courierPhone: courierPhone,
+      rating: rating ?? this.rating,
+      createdAt: createdAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'patient_id': patientId,
+    'items': items.map((e) => e.toJson()).toList(),
+    'delivery_address': deliveryAddress,
+    'delivery_city': deliveryCity,
+    'delivery_phone': deliveryPhone,
+    'payment_method': paymentMethod,
+    'total_amount': totalAmount,
+    // لا نرسل order_id أو status عادةً لأن السيرفر هو من يحددهما عند الإنشاء
+  };
+}
+
+
+
+/*
+import 'order_item_model.dart';
+
+class OrderModel {
+  final String orderId;
+  final String patientId;
+  final String patientName;
+  final List<OrderItem> items;
+  final double totalAmount;
+  final String status;
+  final String deliveryAddress;
+  final String deliveryCity;
+  final String deliveryPhone;
+  final String paymentMethod;
+  final String? trackingNumber;
+  final String? courierName;
+  final String? courierPhone;
+  final int? rating;
+  final DateTime createdAt;
+
+  OrderModel({
+    required this.orderId,
+    required this.patientId,
+    required this.patientName,
+    required this.items,
+    required this.totalAmount,
+    required this.status,
+    required this.deliveryAddress,
+    required this.deliveryCity,
+    required this.deliveryPhone,
+    required this.paymentMethod,
+    this.trackingNumber,
+    this.courierName,
+    this.courierPhone,
+    this.rating,
+    required this.createdAt,
+  });
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      orderId: json['order_id'] ?? json['name'] ?? '',
+      patientId: json['patient_id'] ?? '',
+      patientName: json['patient_name'] ?? '',
+      items: (json['items'] as List? ?? [])
+          .map((e) => OrderItem.fromJson(e))
+          .toList(),
+      totalAmount: (json['total_amount'] ?? 0).toDouble(),
+      status: json['status'] ?? '',
+      deliveryAddress: json['delivery_address'] ?? '',
+      deliveryCity: json['delivery_city'] ?? '',
+      deliveryPhone: json['delivery_phone'] ?? '',
+      paymentMethod: json['payment_method'] ?? '',
+      trackingNumber: json['tracking_number'],
+      courierName: json['courier_name'],
+      courierPhone: json['courier_phone'],
+      rating: json['order_rating'],
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  OrderModel copyWith({
+    String? status,
+    int? rating,
+    String? trackingNumber,
+  }) {
+    return OrderModel(
+      orderId: orderId,
+      patientId: patientId,
+      patientName: patientName,
+      items: items,
+      totalAmount: totalAmount,
+      status: status ?? this.status,
+      deliveryAddress: deliveryAddress,
+      deliveryCity: deliveryCity,
+      deliveryPhone: deliveryPhone,
+      paymentMethod: paymentMethod,
+      trackingNumber: trackingNumber ?? this.trackingNumber,
+      courierName: courierName,
+      courierPhone: courierPhone,
+      rating: rating ?? this.rating,
+      createdAt: createdAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'patient_id': patientId,
+    'items': items.map((e) => e.toJson()).toList(),
+    'delivery_address': deliveryAddress,
+    'delivery_city': deliveryCity,
+    'delivery_phone': deliveryPhone,
+    'payment_method': paymentMethod,
+    'total_amount': totalAmount,
+    // لا نرسل order_id أو status عادةً لأن السيرفر هو من يحددهما عند الإنشاء
+  };
+}
+
+ */
+
+
+
+/*
+// الاول
+import 'cart_item_model.dart';
 class OrderModel {
   final String orderId;
   final String patientId;
@@ -86,72 +288,6 @@ class OrderModel {
 }
 
 
-
-
-
-/*
-class Order {
-  final String? name;
-  final String patient;
-  final String? patientName;
-  final String orderDate;
-  final String orderStatus; // Pending, Confirmed, Processing, Shipped, Delivered, Cancelled
-  final List<OrderItem> items;
-  final double totalAmount;
-  final double discountAmount;
-  final double taxAmount;
-  final double grandTotal;
-  final String? deliveryAddress;
-  final String? deliveryCity;
-  final String? deliveryDate;
-  final String? deliveryStatus;
-  final String? paymentMethod;
-  final String? paymentStatus;
-
-  Order({
-    this.name,
-    required this.patient,
-    this.patientName,
-    required this.orderDate,
-    required this.orderStatus,
-    required this.items,
-    required this.totalAmount,
-    this.discountAmount = 0,
-    this.taxAmount = 0,
-    required this.grandTotal,
-    this.deliveryAddress,
-    this.deliveryCity,
-    this.deliveryDate,
-    this.deliveryStatus,
-    this.paymentMethod,
-    this.paymentStatus,
-  });
-
-  factory Order.fromJson(Map<String, dynamic> json) {
-    return Order(
-      name: json['name'],
-      patient: json['patient'],
-      patientName: json['patient_name'],
-      orderDate: json['order_date'],
-      orderStatus: json['order_status'] ?? 'Pending',
-      items: (json['items'] as List?)
-          ?.map((i) => OrderItem.fromJson(i))
-          .toList() ??
-          [],
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
-      discountAmount: (json['discount_amount'] ?? 0).toDouble(),
-      taxAmount: (json['tax_amount'] ?? 0).toDouble(),
-      grandTotal: (json['grand_total'] ?? 0).toDouble(),
-      deliveryAddress: json['delivery_address'],
-      deliveryCity: json['delivery_city'],
-      deliveryDate: json['delivery_date'],
-      deliveryStatus: json['delivery_status'],
-      paymentMethod: json['payment_method'],
-      paymentStatus: json['payment_status'],
-    );
-  }
-}
-
 class OrderItem {
   final String itemName;
   final String? description;
@@ -189,6 +325,8 @@ class OrderItem {
 }
 
  */
+
+
 
 
 

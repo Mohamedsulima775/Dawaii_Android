@@ -1,3 +1,4 @@
+/*
 class Product {
    final String? id;
   final String? name;
@@ -48,4 +49,59 @@ class Product {
   }
 
   bool get iStock => stock > 0;
+}
+
+ */
+
+// التفعديل النهائي للربط
+
+class Product {
+  final String id;
+  final String itemName;
+  final String? description;
+  final double price;
+  final int stock;
+  final String? category;
+  final String? image;
+  final List<String>? images;
+  final double? rating;
+  final int? reviewsCount;
+
+  Product({
+    required this.id,
+    required this.itemName,
+    this.description,
+    required this.price,
+    required this.stock,
+    this.category,
+    this.image,
+    this.images,
+    this.rating,
+    this.reviewsCount,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    final int stock = json['stock'] ?? 0;
+
+    return Product(
+      id: json['name'] ?? json['id'] ?? '',
+      itemName: json['item_name'] ?? '',
+      description: json['description'],
+      price: (json['price'] ?? 0).toDouble(),
+      stock: stock,
+      category: json['category'],
+      image: json['image'],
+      images: json['images'] != null
+          ? List<String>.from(json['images'])
+          : null,
+      rating: json['rating']?.toDouble(),
+      reviewsCount: json['reviews_count'],
+    );
+  }
+
+  bool get isInStock => stock > 0;
+
+  get imageUrl => null;
+
+ // get imageUrl => null;
 }

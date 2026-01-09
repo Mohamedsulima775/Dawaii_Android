@@ -48,12 +48,14 @@ dev_dependencies:
   local_auth: ^3.0.0
   package_info_plus: ^9.0.0
   url_launcher: ^6.3.2
+  url_image: ^1.2.0
   connectivity_plus: ^6.1.5
   internet_connection_checker: ^3.0.1
   equatable: ^2.0.7
   provider: ^6.1.5+1
   #riverpod: ^3.1.0
   http: ^1.6.0
+  foundation: ^0.0.5
 flutter:
   uses-material-design: true
 
