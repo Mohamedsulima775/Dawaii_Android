@@ -1,22 +1,27 @@
 //lib/data/repositories/auth_repository_impl.dart
 
 import 'package:dartz/dartz.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/patient.dart';
 import '../data_sources/remote/auth_api.dart';
-import '../models/patient_model.dart';
 import 'auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthApi _authApi;
-  final SharedPreferences _prefs;
+  final FlutterSecureStorage _secureStorage;
+
+  // Storage keys
+  static const String _keyAuthToken = 'auth_token';
+  static const String _keyRefreshToken = 'refresh_token';
+  static const String _keyPatientId = 'patient_id';
+  static const String _keyPatientName = 'patient_name';
 
   AuthRepositoryImpl({
     required AuthApi authApi,
-    required SharedPreferences prefs,
+    FlutterSecureStorage? secureStorage,
   })  : _authApi = authApi,
-        _prefs = prefs;
+        _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   @override
   Future<Either<Failure, AuthResult>> login({
@@ -29,16 +34,20 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
 
-      // Save token and user info
-      await _prefs.setString('auth_token', response.token);
-      await _prefs.setString('patient_id', response.patientId);
-      await _prefs.setString('patient_name', response.patientName);
+      // Save tokens and user info securely
+      await _secureStorage.write(key: _keyAuthToken, value: response.token);
+      await _secureStorage.write(key: _keyPatientId, value: response.patientId);
+      await _secureStorage.write(key: _keyPatientName, value: response.patientName);
 
-      // Create Patient entity (you may need to adjust this based on your Patient model)
+      // Save refresh token if available
+      if (response.refreshToken != null) {
+        await _secureStorage.write(key: _keyRefreshToken, value: response.refreshToken);
+      }
+
+      // Create Patient entity
       final patient = Patient(
         id: response.patientId,
         name: response.patientName,
-        // Add other required fields
       );
 
       return Right(AuthResult(
@@ -67,16 +76,20 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email,
       );
 
-      // Save token and user info
-      await _prefs.setString('auth_token', response.token);
-      await _prefs.setString('patient_id', response.patientId);
-      await _prefs.setString('patient_name', response.patientName);
+      // Save tokens and user info securely
+      await _secureStorage.write(key: _keyAuthToken, value: response.token);
+      await _secureStorage.write(key: _keyPatientId, value: response.patientId);
+      await _secureStorage.write(key: _keyPatientName, value: response.patientName);
+
+      // Save refresh token if available
+      if (response.refreshToken != null) {
+        await _secureStorage.write(key: _keyRefreshToken, value: response.refreshToken);
+      }
 
       // Create Patient entity
       final patient = Patient(
         id: response.patientId,
         name: response.patientName,
-        // Add other required fields
       );
 
       return Right(AuthResult(
@@ -94,10 +107,11 @@ class AuthRepositoryImpl implements AuthRepository {
       // Call logout API if needed
       // await _authApi.logout();
 
-      // Clear local storage
-      await _prefs.remove('auth_token');
-      await _prefs.remove('patient_id');
-      await _prefs.remove('patient_name');
+      // Clear all secure storage
+      await _secureStorage.delete(key: _keyAuthToken);
+      await _secureStorage.delete(key: _keyRefreshToken);
+      await _secureStorage.delete(key: _keyPatientId);
+      await _secureStorage.delete(key: _keyPatientName);
 
       return const Right(null);
     } catch (e) {
@@ -108,8 +122,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, Patient?>> getCurrentUser() async {
     try {
-      final patientId = _prefs.getString('patient_id');
-      final patientName = _prefs.getString('patient_name');
+      final patientId = await _secureStorage.read(key: _keyPatientId);
+      final patientName = await _secureStorage.read(key: _keyPatientName);
 
       if (patientId == null || patientName == null) {
         return const Right(null);
@@ -119,7 +133,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final patient = Patient(
         id: patientId,
         name: patientName,
-        // Add other fields
       );
 
       return Right(patient);
@@ -130,6 +143,60 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<bool> isLoggedIn() async {
-    return _prefs.getString('auth_token') != null;
+    try {
+      final token = await _secureStorage.read(key: _keyAuthToken);
+      return token != null && token.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get stored auth token
+  Future<String?> getAuthToken() async {
+    try {
+      return await _secureStorage.read(key: _keyAuthToken);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get stored refresh token
+  Future<String?> getRefreshToken() async {
+    try {
+      return await _secureStorage.read(key: _keyRefreshToken);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Refresh auth token
+  Future<Either<Failure, String>> refreshAuthToken() async {
+    try {
+      final refreshToken = await getRefreshToken();
+
+      if (refreshToken == null) {
+        return const Left(AuthenticationFailure('No refresh token available'));
+      }
+
+      // TODO: Call refresh token API endpoint
+      // For now, this is a placeholder
+      // final response = await _authApi.refreshToken(refreshToken);
+      // await _secureStorage.write(key: _keyAuthToken, value: response.token);
+      // return Right(response.token);
+
+      return const Left(ServerFailure('Refresh token not implemented yet'));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+}
+
+// Extension for LoginResponse to handle refresh token
+extension LoginResponseExtension on dynamic {
+  String? get refreshToken {
+    if (this is Map && (this as Map).containsKey('refresh_token')) {
+      return (this as Map)['refresh_token'] as String?;
+    }
+    return null;
   }
 }

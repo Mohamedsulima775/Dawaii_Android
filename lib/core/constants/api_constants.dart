@@ -60,6 +60,7 @@ class ApiConstants {
 
   static const String login = '/my_medicinal.api.patient.login';
   static const String register = '/my_medicinal.api.patient.register';
+  static const String refreshToken = '/my_medicinal.api.patient.refresh_token';
   static const String getProfile = '/my_medicinal.api.patient.get_profile';
   static const String updateProfile = '/my_medicinal.api.patient.update_profile';
   static const String logout = '/my_medicinal.api.patient.logout';

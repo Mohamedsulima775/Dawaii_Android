@@ -3,6 +3,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'dart:io';
+import '../core/constants/api_constants.dart';
+import 'api_service.dart';
 
 /// Top-level function for background messages
 /// يجب أن تكون خارج الـ class
@@ -27,12 +29,20 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
   FlutterLocalNotificationsPlugin();
 
+  // API Service for backend communication
+  ApiService? _apiService;
+
   // FCM Token (سنرسله للـ Backend)
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
   // Callback عند النقر على الإشعار
   Function(Map<String, dynamic>)? onNotificationTap;
+
+  /// Set API service (call this after initializing the service)
+  void setApiService(ApiService apiService) {
+    _apiService = apiService;
+  }
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -158,14 +168,14 @@ class NotificationService {
     _fcmToken = await _fcm.getToken();
     print('📱 FCM Token: $_fcmToken');
 
-    // TODO: Send token to backend (محمد سيحتاجه)
-    // await _sendTokenToBackend(_fcmToken!);
-
     // Listen to token refresh
     _fcm.onTokenRefresh.listen((newToken) {
       _fcmToken = newToken;
       print('🔄 FCM Token refreshed: $newToken');
-      // TODO: Send new token to backend
+      // Send refreshed token to backend
+      if (_apiService != null) {
+        _sendTokenToBackend(newToken);
+      }
     });
 
     // Handle messages based on app state
@@ -356,23 +366,36 @@ class NotificationService {
 
   /// Send FCM token to backend
   Future<void> sendTokenToBackend(String userId) async {
-    if (_fcmToken == null) return;
+    if (_fcmToken == null) {
+      print('⚠️ No FCM token available');
+      return;
+    }
+
+    await _sendTokenToBackend(_fcmToken!);
+  }
+
+  /// Internal method to send token to backend
+  Future<void> _sendTokenToBackend(String token) async {
+    if (_apiService == null) {
+      print('⚠️ API Service not set. Call setApiService() first.');
+      return;
+    }
 
     try {
-      // TODO: استدعاء API لإرسال الـ token لمحمد
-      /*
-      await apiClient.post(
-        '/api/method/update_fcm_token',
+      await _apiService!.post(
+        ApiConstants.registerDevice,
         data: {
-          'user_id': userId,
-          'fcm_token': _fcmToken,
+          'fcm_token': token,
           'platform': Platform.isAndroid ? 'android' : 'ios',
+          'device_info': {
+            'os': Platform.operatingSystem,
+            'version': Platform.operatingSystemVersion,
+          }
         },
       );
-      */
-      print('✅ FCM token sent to backend');
+      print('✅ FCM token sent to backend successfully');
     } catch (e) {
-      print('❌ Error sending FCM token: $e');
+      print('❌ Error sending FCM token to backend: $e');
     }
   }
 }
