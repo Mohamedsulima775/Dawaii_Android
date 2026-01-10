@@ -1,201 +1,85 @@
 //lib/presentation/providers/auth_provider.dart
 
-/////// المعدل غير مهم
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/patient_model.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/network/api_client.dart';
+import '../../data/data_sources/remote/auth_api.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/entities/patient.dart';
+
+// ============================================================================
+// STATE
+// ============================================================================
 
 @immutable
 class AuthState {
   final bool isLoading;
   final bool isAuthenticated;
-  final String? patientId;
-  final String? patientName;
+  final Patient? patient;
   final String? error;
 
   const AuthState({
     this.isLoading = false,
     this.isAuthenticated = false,
-    this.patientId,
-    this.patientName,
+    this.patient,
     this.error,
   });
+
+  // Helper getters for backward compatibility
+  String? get patientId => patient?.id;
+  String? get patientName => patient?.name;
 
   AuthState copyWith({
     bool? isLoading,
     bool? isAuthenticated,
-    String? patientId,
-    String? patientName,
+    Patient? patient,
     String? error,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      patientId: patientId ?? this.patientId,
-      patientName: patientName ?? this.patientName,
+      patient: patient ?? this.patient,
       error: error,
     );
   }
 }
 
-// Fake Repository مؤقت لتشغيل الواجهة
-class FakeAuthRepository {
-  bool get isLoggedIn => true;
-  String get currentPatientId => '123';
-  String get currentPatientName => 'مستخدم تجريبي';
+// ============================================================================
+// PROVIDERS
+// ============================================================================
 
-  Future<AuthResponse> login({required String mobile, required String password}) async {
-    return AuthResponse(patientId: currentPatientId, patientName: currentPatientName);
-  }
-
-  Future<AuthResponse> register({required String mobile, required String patientName, String? email, String? password}) async {
-    return AuthResponse(patientId: currentPatientId, patientName: currentPatientName);
-  }
-
-  Future<void> logout() async {}
-}
-
-// Response class وهمية
-class AuthResponse {
-  final String patientId;
-  final String patientName;
-
-  AuthResponse({required this.patientId, required this.patientName});
-}
-
-// Notifier
-class AuthNotifier extends StateNotifier<AuthState> {
-  final FakeAuthRepository _authRepository;
-
-  AuthNotifier(this._authRepository) : super(const AuthState()) {
-    _checkAuthStatus();
-  }
-
-
-  void _checkAuthStatus() {
-    if (_authRepository.isLoggedIn) {
-      state = state.copyWith(
-        isAuthenticated: true,
-        patientId: _authRepository.currentPatientId,
-        patientName: _authRepository.currentPatientName,
-      );
-    }
-  }
-
-
-
-  Future<void> login({
-    required String mobile,
-    required String password,
-  }) async {
-    state = state.copyWith(isLoading: true, error: null);
-
-    try {
-      final response = await _authRepository.login(
-        mobile: mobile,
-        password: password,
-      );
-
-      state = state.copyWith(
-        isLoading: false,
-        isAuthenticated: true,
-        patientId: response.patientId,
-        patientName: response.patientName,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
-  }
-
-  Future<void> register({
-    required String mobile,
-    required String password,
-    required String patientName,
-    String? email,
-  }) async {
-    state = state.copyWith(isLoading: true, error: null);
-
-    try {
-      final response = await _authRepository.register(
-        mobile: mobile,
-        password: password,
-        patientName: patientName,
-        email: email,
-      );
-
-      state = state.copyWith(
-        isLoading: false,
-        isAuthenticated: true,
-        patientId: response.patientId,
-        patientName: response.patientName,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
-  }
-
-  Future<void> logout() async {
-    await _authRepository.logout();
-    state = const AuthState();
-  }
-
-}
-
-// Provider جاهز للاستخدام
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(FakeAuthRepository());
+/// Secure Storage Provider
+final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
+  return const FlutterSecureStorage();
 });
 
-/*
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-//import 'package:flutter_riverpod/legacy.dart';
-import '../../data/repositories/auth_repository.dart';
-import '../../data/models/patient_model.dart';
+/// API Client Provider
+final apiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient();
+});
 
-// State
-@immutable
-class AuthState {
-  final bool isLoading;
-  final bool isAuthenticated;
-  final String? patientId;
-  final String? patientName;
-  final String? error;
+/// Auth API Provider
+final authApiProvider = Provider<AuthApi>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return AuthApi(apiClient);
+});
 
-  const AuthState({
-    this.isLoading = false,
-    this.isAuthenticated = false,
-    this.patientId,
-    this.patientName,
-    this.error,
-  });
+/// Auth Repository Provider
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final authApi = ref.watch(authApiProvider);
+  final secureStorage = ref.watch(secureStorageProvider);
+  return AuthRepositoryImpl(
+    authApi: authApi,
+    secureStorage: secureStorage,
+  );
+});
 
-  AuthState copyWith({
-    bool? isLoading,
-    bool? isAuthenticated,
-    String? patientId,
-    String? patientName,
-    String? error,
-  }) {
-    return AuthState(
-      isLoading: isLoading ?? this.isLoading,
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      patientId: patientId ?? this.patientId,
-      patientName: patientName ?? this.patientName,
-      error: error,
-    );
-  }
-}
+// ============================================================================
+// NOTIFIER
+// ============================================================================
 
-// Provider
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
 
@@ -203,82 +87,114 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _checkAuthStatus();
   }
 
-  void _checkAuthStatus() {
-    if (_authRepository.isLoggedIn) {
-      state = state.copyWith(
-        isAuthenticated: true,
-        patientId: _authRepository.currentPatientId,
+  /// Check if user is already logged in
+  Future<void> _checkAuthStatus() async {
+    final isLoggedIn = await _authRepository.isLoggedIn();
+
+    if (isLoggedIn) {
+      final result = await _authRepository.getCurrentUser();
+
+      result.fold(
+        (failure) {
+          // Failed to get user, clear auth state
+          state = const AuthState();
+        },
+        (patient) {
+          if (patient != null) {
+            state = state.copyWith(
+              isAuthenticated: true,
+              patient: patient,
+            );
+          }
+        },
       );
     }
   }
 
+  /// Login with mobile and password
   Future<void> login({
     required String mobile,
     required String password,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    try {
-      final response = await _authRepository.login(
-        mobile: mobile,
-        password: password,
-      );
+    final result = await _authRepository.login(
+      mobile: mobile,
+      password: password,
+    );
 
-      state = state.copyWith(
-        isLoading: false,
-        isAuthenticated: true,
-        patientId: response.patientId,
-        patientName: response.patientName,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+        );
+      },
+      (authResult) {
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: true,
+          patient: authResult.patient,
+        );
+      },
+    );
   }
 
+  /// Register new user
   Future<void> register({
     required String mobile,
     required String password,
     required String patientName,
-    String? email,
+    required String email,
+    String? dateOfBirth,
+    String? gender,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    try {
-      final response = await _authRepository.register(
-        mobile: mobile,
-        password: password,
-        patientName: patientName,
-        email: email,
-      );
+    final result = await _authRepository.register(
+      mobile: mobile,
+      password: password,
+      patientName: patientName,
+      email: email,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+    );
 
-      state = state.copyWith(
-        isLoading: false,
-        isAuthenticated: true,
-        patientId: response.patientId,
-        patientName: response.patientName,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+        );
+      },
+      (authResult) {
+        state = state.copyWith(
+          isLoading: false,
+          isAuthenticated: true,
+          patient: authResult.patient,
+        );
+      },
+    );
   }
 
+  /// Logout current user
   Future<void> logout() async {
     await _authRepository.logout();
     state = const AuthState();
   }
+
+  /// Clear error message
+  void clearError() {
+    state = state.copyWith(error: null);
+  }
 }
 
-// Provider Instance
+// ============================================================================
+// AUTH PROVIDER
+// ============================================================================
+
+/// Main Auth Provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  // TODO: Inject dependencies properly
-  throw UnimplementedError();
+  final authRepository = ref.watch(authRepositoryProvider);
+  return AuthNotifier(authRepository);
 });
-
- */
-
