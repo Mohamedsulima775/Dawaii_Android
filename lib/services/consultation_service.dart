@@ -1,7 +1,9 @@
+// lib/services/consultation_service.dart
 
-
+import '../core/constants/api_constants.dart';
 import '../data/models/consultation_model.dart';
 import 'api_service.dart';
+
 class ConsultationService {
   final ApiService _apiService;
 
@@ -11,7 +13,7 @@ class ConsultationService {
   Future<List<Consultation>> getConsultations(String patientId,
       {String? status}) async {
     final response = await _apiService.get(
-      'my_medicinal.api.get_consultations',
+      ApiConstants.getMyConsultations,
       params: {
         'patient_id': patientId,
         if (status != null) 'status': status,
@@ -24,39 +26,21 @@ class ConsultationService {
         [];
   }
 
-  // Get consultation details
-  Future<Consultation> getConsultationDetails(String consultationId) async {
-    final response = await _apiService.get(
-      'my_medicinal.api.get_consultation_details',
-      params: {'consultation_id': consultationId},
-    );
-
-    return Consultation.fromJson(response['message']);
-  }
-
-  // Book consultation
-  Future<Consultation> bookConsultation(Map<String, dynamic> data) async {
+  // Create consultation
+  Future<Consultation> createConsultation(Map<String, dynamic> data) async {
     final response = await _apiService.post(
-      'my_medicinal.api.book_consultation',
+      ApiConstants.createConsultation,
       data: data,
     );
 
     return Consultation.fromJson(response['message']);
   }
 
-  // Cancel consultation
-  Future<void> cancelConsultation(String consultationId) async {
-    await _apiService.post(
-      'my_medicinal.api.cancel_consultation',
-      data: {'consultation_id': consultationId},
-    );
-  }
-
   // Get consultation messages
   Future<List<ConsultationMessage>> getConsultationMessages(
       String consultationId) async {
     final response = await _apiService.get(
-      'my_medicinal.api.get_consultation_messages',
+      ApiConstants.getMessages,
       params: {'consultation_id': consultationId},
     );
 
@@ -70,7 +54,7 @@ class ConsultationService {
   Future<ConsultationMessage> sendMessage(
       String consultationId, String message, {String? attachment}) async {
     final response = await _apiService.post(
-      'my_medicinal.api.send_message',
+      ApiConstants.sendMessage,
       data: {
         'consultation_id': consultationId,
         'message': message,

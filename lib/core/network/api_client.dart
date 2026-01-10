@@ -202,24 +202,26 @@ class ApiClient {
         Map<String, dynamic>? queryParameters,
         Map<String, String>? headers,
       }) async {
-    await _checkConnectivity();
+    return _retryRequest(() async {
+      await _checkConnectivity();
 
-    final uri = _buildUri(endpoint, queryParameters);
-    final requestHeaders = _buildHeaders(headers);
+      final uri = _buildUri(endpoint, queryParameters);
+      final requestHeaders = _buildHeaders(headers);
 
-    try {
-      final response = await _client
-          .get(uri, headers: requestHeaders)
-          .timeout(ApiConstants.receiveTimeout);
+      try {
+        final response = await _client
+            .get(uri, headers: requestHeaders)
+            .timeout(ApiConstants.receiveTimeout);
 
-      return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkException();
-    } on http.ClientException {
-      throw const NetworkException();
-    } on TimeoutException {
-      throw const TimeoutException();
-    }
+        return _handleResponse(response);
+      } on SocketException {
+        throw const NetworkException();
+      } on http.ClientException {
+        throw const NetworkException();
+      } on TimeoutException {
+        throw const TimeoutException();
+      }
+    });
   }
 
   // ==========================================
@@ -231,28 +233,30 @@ class ApiClient {
         Map<String, dynamic>? body,
         Map<String, String>? headers,
       }) async {
-    await _checkConnectivity();
+    return _retryRequest(() async {
+      await _checkConnectivity();
 
-    final uri = _buildUri(endpoint);
-    final requestHeaders = _buildHeaders(headers);
+      final uri = _buildUri(endpoint);
+      final requestHeaders = _buildHeaders(headers);
 
-    try {
-      final response = await _client
-          .post(
-        uri,
-        headers: requestHeaders,
-        body: body != null ? json.encode(body) : null,
-      )
-          .timeout(ApiConstants.sendTimeout);
+      try {
+        final response = await _client
+            .post(
+          uri,
+          headers: requestHeaders,
+          body: body != null ? json.encode(body) : null,
+        )
+            .timeout(ApiConstants.sendTimeout);
 
-      return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkException();
-    } on http.ClientException {
-      throw const NetworkException();
-    } on TimeoutException {
-      throw const TimeoutException();
-    }
+        return _handleResponse(response);
+      } on SocketException {
+        throw const NetworkException();
+      } on http.ClientException {
+        throw const NetworkException();
+      } on TimeoutException {
+        throw const TimeoutException();
+      }
+    });
   }
 
   // ==========================================
@@ -264,28 +268,30 @@ class ApiClient {
         Map<String, dynamic>? body,
         Map<String, String>? headers,
       }) async {
-    await _checkConnectivity();
+    return _retryRequest(() async {
+      await _checkConnectivity();
 
-    final uri = _buildUri(endpoint);
-    final requestHeaders = _buildHeaders(headers);
+      final uri = _buildUri(endpoint);
+      final requestHeaders = _buildHeaders(headers);
 
-    try {
-      final response = await _client
-          .put(
-        uri,
-        headers: requestHeaders,
-        body: body != null ? json.encode(body) : null,
-      )
-          .timeout(ApiConstants.sendTimeout);
+      try {
+        final response = await _client
+            .put(
+          uri,
+          headers: requestHeaders,
+          body: body != null ? json.encode(body) : null,
+        )
+            .timeout(ApiConstants.sendTimeout);
 
-      return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkException();
-    } on http.ClientException {
-      throw const NetworkException();
-    } on TimeoutException {
-      throw const TimeoutException();
-    }
+        return _handleResponse(response);
+      } on SocketException {
+        throw const NetworkException();
+      } on http.ClientException {
+        throw const NetworkException();
+      } on TimeoutException {
+        throw const TimeoutException();
+      }
+    });
   }
 
   // ==========================================
@@ -296,24 +302,26 @@ class ApiClient {
       String endpoint, {
         Map<String, String>? headers,
       }) async {
-    await _checkConnectivity();
+    return _retryRequest(() async {
+      await _checkConnectivity();
 
-    final uri = _buildUri(endpoint);
-    final requestHeaders = _buildHeaders(headers);
+      final uri = _buildUri(endpoint);
+      final requestHeaders = _buildHeaders(headers);
 
-    try {
-      final response = await _client
-          .delete(uri, headers: requestHeaders)
-          .timeout(ApiConstants.receiveTimeout);
+      try {
+        final response = await _client
+            .delete(uri, headers: requestHeaders)
+            .timeout(ApiConstants.receiveTimeout);
 
-      return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkException();
-    } on http.ClientException {
-      throw const NetworkException();
-    } on TimeoutException {
-      throw const TimeoutException();
-    }
+        return _handleResponse(response);
+      } on SocketException {
+        throw const NetworkException();
+      } on http.ClientException {
+        throw const NetworkException();
+      } on TimeoutException {
+        throw const TimeoutException();
+      }
+    });
   }
 
   // ==========================================
@@ -382,6 +390,38 @@ class ApiClient {
     }
 
     return headers;
+  }
+
+  /// Retry request with exponential backoff
+  Future<Map<String, dynamic>> _retryRequest(
+      Future<Map<String, dynamic>> Function() request,
+      ) async {
+    int retryCount = 0;
+
+    while (retryCount < ApiConstants.maxRetries) {
+      try {
+        return await request();
+      } on NetworkException catch (e) {
+        retryCount++;
+        if (retryCount >= ApiConstants.maxRetries) {
+          rethrow;
+        }
+        // Exponential backoff: wait before retrying
+        await Future.delayed(ApiConstants.retryDelay * retryCount);
+      } on TimeoutException catch (e) {
+        retryCount++;
+        if (retryCount >= ApiConstants.maxRetries) {
+          rethrow;
+        }
+        await Future.delayed(ApiConstants.retryDelay * retryCount);
+      } catch (e) {
+        // For other exceptions, don't retry
+        rethrow;
+      }
+    }
+
+    // This should never be reached, but just in case
+    return await request();
   }
 
   /// Check internet connectivity
