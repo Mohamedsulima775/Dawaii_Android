@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/patient.dart';
 import '../data_sources/remote/auth_api.dart';
+import '../models/patient_model.dart';
 import 'auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -29,10 +30,13 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await _authApi.login(
+      final responseMap = await _authApi.login(
         mobile: mobile,
         password: password,
       );
+
+      // Convert Map to LoginResponse
+      final response = LoginResponse.fromJson(responseMap);
 
       // Save tokens and user info securely
       await _secureStorage.write(key: _keyAuthToken, value: response.token);
@@ -40,14 +44,16 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.write(key: _keyPatientName, value: response.patientName);
 
       // Save refresh token if available
-      if (response.refreshToken != null) {
-        await _secureStorage.write(key: _keyRefreshToken, value: response.refreshToken);
+      final refreshToken = responseMap['refresh_token'] as String?;
+      if (refreshToken != null) {
+        await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
       }
 
       // Create Patient entity
       final patient = Patient(
         id: response.patientId,
         name: response.patientName,
+        mobile: mobile,
       );
 
       return Right(AuthResult(
@@ -69,12 +75,17 @@ class AuthRepositoryImpl implements AuthRepository {
     String? gender,
   }) async {
     try {
-      final response = await _authApi.register(
+      final responseMap = await _authApi.register(
         mobile: mobile,
         password: password,
         patientName: patientName,
         email: email,
+        dateOfBirth: dateOfBirth ?? '',
+        gender: gender ?? '',
       );
+
+      // Convert Map to LoginResponse
+      final response = LoginResponse.fromJson(responseMap);
 
       // Save tokens and user info securely
       await _secureStorage.write(key: _keyAuthToken, value: response.token);
@@ -82,14 +93,19 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.write(key: _keyPatientName, value: response.patientName);
 
       // Save refresh token if available
-      if (response.refreshToken != null) {
-        await _secureStorage.write(key: _keyRefreshToken, value: response.refreshToken);
+      final refreshToken = responseMap['refresh_token'] as String?;
+      if (refreshToken != null) {
+        await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
       }
 
       // Create Patient entity
       final patient = Patient(
         id: response.patientId,
         name: response.patientName,
+        mobile: mobile,
+        email: email,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
       );
 
       return Right(AuthResult(
@@ -175,7 +191,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final refreshToken = await getRefreshToken();
 
       if (refreshToken == null) {
-        return const Left(AuthenticationFailure('No refresh token available'));
+        return const Left(AuthFailure('No refresh token available'));
       }
 
       // TODO: Call refresh token API endpoint
@@ -188,15 +204,5 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
-  }
-}
-
-// Extension for LoginResponse to handle refresh token
-extension LoginResponseExtension on dynamic {
-  String? get refreshToken {
-    if (this is Map && (this as Map).containsKey('refresh_token')) {
-      return (this as Map)['refresh_token'] as String?;
-    }
-    return null;
   }
 }
