@@ -1,7 +1,3 @@
-
-// lib/core/network/api_endpoints.dart
-
-
 // lib/core/constants/app_constants.dart
 
 class AppConstants {
@@ -273,81 +269,4 @@ class AppConstants {
   static const double elevationMD = 4.0;
   static const double elevationLG = 8.0;
   static const double elevationXL = 16.0;
-
-  // ==========================================
-  // API CONFIG (أضف هذا القسم)
-  // ==========================================
-
-  static const String baseUrl = 'https://dawaii-api.example.com'; // ضع رابط السيرفر الخاص بك هنا
-  static const String apiPath = '/api/method'; // حسب هيكلة الـ ERPNext أو السيرفر لديك
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
 }
-
-
-
-
-
-/*
-//الاول
-class AppConstants {
-  // API
-  static const String baseUrl = 'http://localhost:8000';
-  static const String apiPath = '/api/method';
-
-  // Storage Keys
-  static const String tokenKey = 'auth_token';
-  static const String userIdKey = 'user_id';
-  static const String isFirstTimeKey = 'is_first_time';
-
-  // Pagination
-  static const int pageSize = 20;
-
-  // Timeouts
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-
-  // Frequencies
-  static const List<String> frequencies = [
-    'Once Daily',
-    'Twice Daily',
-    'Three Times Daily',
-    'Four Times Daily',
-    'As Needed',
-  ];
-
-  // Meal Times
-  static const List<String> mealTimes = [
-    'Before Meal',
-    'After Meal',
-    'Anytime',
-  ];
-
-  // Consultation Types
-  static const List<String> consultationTypes = [
-    'Chat',
-    'Video Call',
-    'Voice Call',
-    'In-Person',
-  ];
-
-  // Order Status
-  static const List<String> orderStatuses = [
-    'Pending',
-    'Confirmed',
-    'Processing',
-    'Shipped',
-    'Delivered',
-    'Cancelled',
-  ];
-
-  // Prescription Status
-  static const List<String> prescriptionStatuses = [
-    'Active',
-    'Partially Filled',
-    'Filled',
-    'Expired',
-  ];
-}
-
- */

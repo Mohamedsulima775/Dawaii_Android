@@ -83,6 +83,10 @@ class ApiConstants {
 
   static const String createOrder = '/my_medicinal.api.order.create_order';
   static const String getMyOrders = '/my_medicinal.api.order.get_my_orders';
+  static const String getOrderDetail = '/my_medicinal.api.order.get_order_detail';
+  static const String cancelOrder = '/my_medicinal.api.order.cancel_order';
+  static const String rateOrder = '/my_medicinal.api.order.rate_order';
+  static const String confirmDelivery = '/my_medicinal.api.order.confirm_delivery';
 
   // ==========================================
   // PRODUCT ENDPOINTS
