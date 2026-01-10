@@ -1,5 +1,6 @@
-
+import '../core/constants/api_constants.dart';
 import 'api_service.dart';
+
 class AuthService {
   final ApiService _apiService;
 
@@ -8,7 +9,7 @@ class AuthService {
   // Login
   Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await _apiService.post(
-      'login',
+      ApiConstants.login,
       data: {
         'usr': email,
         'pwd': password,
@@ -26,7 +27,7 @@ class AuthService {
   // Register
   Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
     final response = await _apiService.post(
-      'register',
+      ApiConstants.register,
       data: data,
     );
 
@@ -40,14 +41,14 @@ class AuthService {
 
   // Logout
   Future<void> logout() async {
-    await _apiService.post('logout');
+    await _apiService.post(ApiConstants.logout);
     _apiService.clearToken();
   }
 
   // Get profile
   Future<Map<String, dynamic>> getProfile(String patientId) async {
     final response = await _apiService.get(
-      'my_medicinal.api.get_profile',
+      ApiConstants.getProfile,
       params: {'patient_id': patientId},
     );
 
@@ -58,7 +59,7 @@ class AuthService {
   Future<Map<String, dynamic>> updateProfile(
       Map<String, dynamic> data) async {
     final response = await _apiService.put(
-      'my_medicinal.api.update_profile',
+      ApiConstants.updateProfile,
       data: data,
     );
 
