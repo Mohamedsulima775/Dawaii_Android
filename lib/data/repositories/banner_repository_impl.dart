@@ -16,12 +16,24 @@ class BannerRepositoryImpl implements BannerRepository {
     required this.apiService,
   });
 
+  // Helper method to safely extract list from response
+  List _extractList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) return data;
+    if (data is String) return []; // API returned string instead of list
+    if (data is Map && data.containsKey('data')) {
+      return _extractList(data['data']);
+    }
+    return [];
+  }
+
   @override
   Future<Either<Failure, List<BannerModel>>> getBanners() async {
     try {
       final response = await apiService.get('/banners');
-      final banners = (response['data'] as List)
-          .map((json) => BannerModel.fromJson(json))
+      final List data = _extractList(response['data']);
+      final banners = data
+          .map((json) => BannerModel.fromJson(json as Map<String, dynamic>))
           .toList();
 
       return Right(banners);
@@ -44,8 +56,9 @@ class BannerRepositoryImpl implements BannerRepository {
         params: {'location': location},
       );
 
-      final banners = (response['data']as List)
-          .map((json) => BannerModel.fromJson(json))
+      final List data = _extractList(response['data']);
+      final banners = data
+          .map((json) => BannerModel.fromJson(json as Map<String, dynamic>))
           .toList();
 
       return Right(banners);
@@ -62,9 +75,12 @@ class BannerRepositoryImpl implements BannerRepository {
   Future<Either<Failure, BannerModel>> getBannerById(String bannerId) async {
     try {
       final response = await apiService.get('/banners/$bannerId');
-      final banner = BannerModel.fromJson(response['data']);
-
-      return Right(banner);
+      final data = response['data'];
+      if (data is Map<String, dynamic>) {
+        final banner = BannerModel.fromJson(data);
+        return Right(banner);
+      }
+      return Left(ServerFailure('Invalid response format'));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException {

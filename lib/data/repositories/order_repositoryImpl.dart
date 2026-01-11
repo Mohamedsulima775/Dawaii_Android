@@ -15,6 +15,39 @@ class OrderRepositoryImpl implements OrderRepository {
 
   OrderRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
 
+  // Helper method to safely extract list from response
+  List _extractList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) return data;
+    if (data is String) return []; // API returned string instead of list
+    if (data is Map && data.containsKey('orders')) {
+      return _extractList(data['orders']);
+    }
+    if (data is Map && data.containsKey('data')) {
+      return _extractList(data['data']);
+    }
+    return [];
+  }
+
+  // Helper method to safely extract map from response
+  Map<String, dynamic>? _extractMap(dynamic data, String key) {
+    if (data == null) return null;
+    if (data is Map<String, dynamic>) {
+      if (data.containsKey(key)) {
+        final value = data[key];
+        if (value is Map<String, dynamic>) return value;
+      }
+      // Try nested message
+      if (data.containsKey('message')) {
+        return _extractMap(data['message'], key);
+      }
+      if (data.containsKey('data')) {
+        return _extractMap(data['data'], key);
+      }
+    }
+    return null;
+  }
+
   // ==========================================
   // Create Order
   // ==========================================
@@ -49,9 +82,16 @@ class OrderRepositoryImpl implements OrderRepository {
         },
       );
 
-      final model =
-      OrderModel.fromJson(response['data']['message']['order']);
-      return Right(model);
+      // Safely extract order data
+      final orderData = _extractMap(response, 'order') ??
+          _extractMap(response['data'], 'order') ??
+          _extractMap(response['message'], 'order');
+
+      if (orderData != null) {
+        final model = OrderModel.fromJson(orderData);
+        return Right(model);
+      }
+      return Left(ServerFailure('Invalid response format'));
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'Server error'));
     } catch (e) {
@@ -76,8 +116,25 @@ class OrderRepositoryImpl implements OrderRepository {
         },
       );
 
-      final list = (response['data']['message']['orders'] as List)
-          .map((e) => OrderModel.fromJson(e))
+      // Safely extract orders list
+      List ordersData = [];
+
+      // Try different paths
+      if (response['data'] != null) {
+        final data = response['data'];
+        if (data is Map && data['message'] != null) {
+          ordersData = _extractList(data['message']);
+        } else {
+          ordersData = _extractList(data);
+        }
+      } else if (response['message'] != null) {
+        ordersData = _extractList(response['message']);
+      } else {
+        ordersData = _extractList(response);
+      }
+
+      final list = ordersData
+          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
           .toList();
 
       return Right(list);
@@ -99,9 +156,16 @@ class OrderRepositoryImpl implements OrderRepository {
         body: {'order_id': orderId},
       );
 
-      final model =
-      OrderModel.fromJson(response['data']['message']['order']);
-      return Right(model);
+      // Safely extract order data
+      final orderData = _extractMap(response, 'order') ??
+          _extractMap(response['data'], 'order') ??
+          _extractMap(response['message'], 'order');
+
+      if (orderData != null) {
+        final model = OrderModel.fromJson(orderData);
+        return Right(model);
+      }
+      return Left(ServerFailure('Invalid response format'));
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'Server error'));
     } catch (e) {
