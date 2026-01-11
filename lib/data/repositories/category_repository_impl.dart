@@ -18,13 +18,25 @@ class CategoryRepositoryImpl implements CategoryRepository {
     required this.apiService,
   });
 
+  // Helper method to safely extract list from response
+  List _extractList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) return data;
+    if (data is String) return []; // API returned string instead of list
+    if (data is Map && data.containsKey('data')) {
+      return _extractList(data['data']);
+    }
+    return [];
+  }
+
   @override
   Future<Either<Failure, List<CategoryItem>>> getCategories() async {
     try {
       final response = await apiService.get('/categories');
 
-      final categories = (response['data'] as List)
-          .map((json) => CategoryItem.fromJson(json))
+      final List data = _extractList(response['data']);
+      final categories = data
+          .map((json) => CategoryItem.fromJson(json as Map<String, dynamic>))
           .toList();
 
       return Right(categories);
@@ -43,9 +55,12 @@ class CategoryRepositoryImpl implements CategoryRepository {
       ) async {
     try {
       final response = await apiService.get('/categories/$categoryId');
-      final category = CategoryItem.fromJson(response['data'] );
-
-      return Right(category);
+      final data = response['data'];
+      if (data is Map<String, dynamic>) {
+        final category = CategoryItem.fromJson(data);
+        return Right(category);
+      }
+      return Left(ServerFailure('Invalid response format'));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException {
@@ -65,8 +80,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
         params: {'parent_id': parentId},
       );
 
-      final subcategories = (response['data'] as List)
-          .map((json) => CategoryItem.fromJson(json))
+      final List data = _extractList(response['data']);
+      final subcategories = data
+          .map((json) => CategoryItem.fromJson(json as Map<String, dynamic>))
           .toList();
 
       return Right(subcategories);

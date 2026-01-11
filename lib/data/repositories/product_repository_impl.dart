@@ -11,6 +11,17 @@ class ProductRepositoryImpl implements ProductRepository {
 
   ProductRepositoryImpl(this.api);
 
+  // Helper method to safely extract list from response
+  List _extractList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) return data;
+    if (data is String) return []; // API returned string instead of list
+    if (data is Map && data.containsKey('data')) {
+      return _extractList(data['data']);
+    }
+    return [];
+  }
+
   @override
   Future<Either<Failure, List<Product>>> getProducts({
     int page = 1,
@@ -25,14 +36,11 @@ class ProductRepositoryImpl implements ProductRepository {
         },
       );
 
-      //final List data = response['message'];
-      final List data = (response['message'] as List?) ?? [];
+      final List data = _extractList(response['message']);
 
-      return Right(data.map((e) => Product.fromJson(e)).toList());
+      return Right(data.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
-      //return Left(ServerFailure.fromException(e));
-
     }
   }
 
@@ -44,7 +52,11 @@ class ProductRepositoryImpl implements ProductRepository {
         params: {'product_id': productId},
       );
 
-      return Right(Product.fromJson(response['message']));
+      final data = response['message'];
+      if (data is Map<String, dynamic>) {
+        return Right(Product.fromJson(data));
+      }
+      return Left(ServerFailure('Invalid response format'));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -59,10 +71,9 @@ class ProductRepositoryImpl implements ProductRepository {
         params: {'category': categoryId},
       );
 
-      //final List data = response['message'];
-      final List data = (response['message'] as List?) ?? [];
+      final List data = _extractList(response['message']);
 
-      return Right(data.map((e) => Product.fromJson(e)).toList());
+      return Right(data.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -75,11 +86,9 @@ class ProductRepositoryImpl implements ProductRepository {
         '/api/method/my_medicinal.api.product.get_featured_products',
       );
 
+      final List data = _extractList(response['message']);
 
-      // final List data = response['message'];
-      final List data = (response['message'] as List?) ?? [];
-
-      return Right(data.map((e) => Product.fromJson(e)).toList());
+      return Right(data.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -99,7 +108,11 @@ class ProductRepositoryImpl implements ProductRepository {
         },
       );
 
-      return Right(response['message']['available'] ?? false);
+      final message = response['message'];
+      if (message is Map<String, dynamic>) {
+        return Right(message['available'] ?? false);
+      }
+      return const Right(false);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
