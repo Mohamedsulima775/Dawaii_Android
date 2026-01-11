@@ -46,9 +46,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 // 1.
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart' as provider_pkg;
 
 // Router
 import 'package:dawaii/core/routes/routes.dart';
+
+// Providers & Repositories
+import 'package:dawaii/presentation/providers/product_provider.dart';
+import 'package:dawaii/data/repositories/product_repository_impl.dart';
+import 'package:dawaii/services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,22 +79,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Dawaii',
-      debugShowCheckedModeBanner: false,
-      routerConfig: appRouter,
+    // Create ApiService and ProductRepository
+    final apiService = ApiService();
+    final productRepository = ProductRepositoryImpl(apiService);
 
-      // 2.
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+    return provider_pkg.MultiProvider(
+      providers: [
+        provider_pkg.ChangeNotifierProvider<ProductProvider>(
+          create: (_) => ProductProvider(repository: productRepository),
+        ),
       ],
-      supportedLocales: const [
-        Locale('ar', 'SA'), //
-        Locale('en', 'US'), //
-      ],
-      locale: const Locale('ar', 'SA'), //
+      child: MaterialApp.router(
+        title: 'Dawaii',
+        debugShowCheckedModeBanner: false,
+        routerConfig: appRouter,
+
+        // 2.
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('ar', 'SA'), //
+          Locale('en', 'US'), //
+        ],
+        locale: const Locale('ar', 'SA'), //
+      ),
     );
   }
 }

@@ -2,7 +2,7 @@
 // api_service.dart
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../core/constants/app_constants.dart' as app_constants;
+import '../core/constants/api_constants.dart';
 
 class ApiService {
   late final Dio _dio;
@@ -11,9 +11,9 @@ class ApiService {
   ApiService() {
 
     _dio = Dio(BaseOptions(
-      baseUrl: app_constants.AppConstants.baseUrl,
-      connectTimeout: app_constants.AppConstants.connectTimeout,
-      receiveTimeout: app_constants.AppConstants.receiveTimeout,
+      baseUrl: ApiConstants.baseUrl,
+      connectTimeout: ApiConstants.connectTimeout,
+      receiveTimeout: ApiConstants.receiveTimeout,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -72,7 +72,7 @@ class ApiService {
       {Map<String, dynamic>? data}) async {
     try {
       final response = await _dio.post(
-        '${app_constants.AppConstants.apiPath}/$endpoint',
+        '${ApiConstants.apiPath}/$endpoint',
         data: data,
       );
       return _handleResponse(response);
@@ -85,7 +85,7 @@ class ApiService {
       {Map<String, dynamic>? data}) async {
     try {
       final response = await _dio.put(
-        '${app_constants.AppConstants.apiPath}/$endpoint',
+        '${ApiConstants.apiPath}/$endpoint',
         data: data,
       );
       return _handleResponse(response);
@@ -98,7 +98,7 @@ class ApiService {
       {Map<String, dynamic>? data}) async {
     try {
       final response = await _dio.delete(
-        '${app_constants.AppConstants.apiPath}/$endpoint',
+        '${ApiConstants.apiPath}/$endpoint',
         data: data,
       );
       return _handleResponse(response);
