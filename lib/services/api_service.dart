@@ -1,5 +1,6 @@
 
 // api_service.dart
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../core/constants/api_constants.dart';
@@ -109,9 +110,48 @@ class ApiService {
 
   Map<String, dynamic> _handleResponse(Response response) {
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return response.data;
+      // Handle different response types
+      final data = response.data;
+
+      if (data == null) {
+        return {'message': 'Success', 'data': null};
+      }
+
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+
+      if (data is String) {
+        // Try to parse as JSON if it's a string
+        try {
+          final parsed = data.isNotEmpty ? Map<String, dynamic>.from(
+            (data.startsWith('{') || data.startsWith('['))
+              ? _parseJson(data)
+              : {'message': data}
+          ) : {'message': 'Success'};
+          return parsed;
+        } catch (e) {
+          return {'message': data};
+        }
+      }
+
+      if (data is List) {
+        return {'message': data, 'data': data};
+      }
+
+      // Fallback for other types
+      return {'message': data.toString()};
     } else {
       throw Exception('API Error: ${response.statusMessage}');
+    }
+  }
+
+  // Helper method to parse JSON string
+  dynamic _parseJson(String jsonString) {
+    try {
+      return json.decode(jsonString);
+    } catch (e) {
+      return {'raw': jsonString};
     }
   }
 

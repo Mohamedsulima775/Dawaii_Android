@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
 
 */
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -56,22 +57,52 @@ import 'package:dawaii/presentation/providers/product_provider.dart';
 import 'package:dawaii/data/repositories/product_repository_impl.dart';
 import 'package:dawaii/services/api_service.dart';
 
+// Global instances - created once at app start
+late final ApiService globalApiService;
+late final ProductRepositoryImpl globalProductRepository;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Allow bad certificates for development (remove in production!)
+  HttpOverrides.global = MyHttpOverrides();
+
+  // Initialize global services BEFORE runApp
+  globalApiService = ApiService();
+  globalProductRepository = ProductRepositoryImpl(globalApiService);
+
   // Firebase init
   await Firebase.initializeApp();
-  debugPrint(' Firebase initialized');
+  debugPrint(' Firebase initialized');
 
   // FCM Token
   final token = await FirebaseMessaging.instance.getToken();
-  debugPrint(' FCM TOKEN: $token');
+  debugPrint(' FCM TOKEN: $token');
 
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    // IMPORTANT: MultiProvider must wrap everything including ProviderScope
+    // This ensures ProductProvider is available to ALL routes
+    provider_pkg.MultiProvider(
+      providers: [
+        provider_pkg.ChangeNotifierProvider<ProductProvider>(
+          create: (_) => ProductProvider(repository: globalProductRepository),
+        ),
+      ],
+      child: const ProviderScope(
+        child: MyApp(),
+      ),
     ),
   );
+}
+
+// HTTP Overrides for SSL issues in development
+// WARNING: Remove this in production!
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -79,37 +110,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Create ApiService and ProductRepository
-    final apiService = ApiService();
-    final productRepository = ProductRepositoryImpl(apiService);
+    return MaterialApp.router(
+      title: 'Dawaii',
+      debugShowCheckedModeBanner: false,
+      routerConfig: appRouter,
 
-    return provider_pkg.MultiProvider(
-      providers: [
-        provider_pkg.ChangeNotifierProvider<ProductProvider>(
-          create: (_) => ProductProvider(repository: productRepository),
-        ),
+      // 2.
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
-      child: MaterialApp.router(
-        title: 'Dawaii',
-        debugShowCheckedModeBanner: false,
-        routerConfig: appRouter,
-
-        // 2.
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('ar', 'SA'), //
-          Locale('en', 'US'), //
-        ],
-        locale: const Locale('ar', 'SA'), //
-      ),
+      supportedLocales: const [
+        Locale('ar', 'SA'), //
+        Locale('en', 'US'), //
+      ],
+      locale: const Locale('ar', 'SA'), //
     );
   }
 }
-
-
-
-
