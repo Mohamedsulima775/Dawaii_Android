@@ -37,18 +37,16 @@ class ApiConstants {
   // BASE URLs
   // ==========================================
 
-  // Development
-  // WARNING: Using HTTP in development is insecure. Passwords and sensitive data
-  // will be transmitted in plaintext. Use HTTPS even for local development.
-  // To use HTTPS locally: Set up a reverse proxy (nginx) or use ngrok/localtunnel
-  static const String devBaseUrl = 'https://localhost:8000';
+  // Development - للتطوير المحلي
+  // Android Emulator uses 10.0.2.2 to access host's localhost
+  static const String devBaseUrl = 'http://10.0.2.2:8000';
 
-  // Production
+  // Production - للإنتاج
   static const String prodBaseUrl = 'https://dawaii.com';
 
-  // Current base URL (change based on environment)
-  // SECURITY: Default to production URL (HTTPS). Only use devBaseUrl in local development.
-  static const String baseUrl = prodBaseUrl;
+  // Current base URL - غيّر هذا حسب البيئة
+  // استخدم devBaseUrl للتطوير، prodBaseUrl للإنتاج
+  static const String baseUrl = devBaseUrl;
 
   // API base path
   static const String apiPath = '/api/method';
