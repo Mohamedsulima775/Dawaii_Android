@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
-  // Backend URL - تعديلها حسب السيرفر
-  static const String baseUrl = 'https://your-domain.com/api/method';
+  // Backend URL - use the production API
+  static const String baseUrl = 'https://dawaii.com/api/method';
 
   // Get authorization token
   Future<String?> _getToken() async {

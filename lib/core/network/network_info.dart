@@ -27,7 +27,7 @@ class NotFoundException extends ServerException {
 // lib/core/network/network_info.dart
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 abstract class NetworkInfo {
   Future<bool> get isConnected;
@@ -36,35 +36,31 @@ abstract class NetworkInfo {
 
 class NetworkInfoImpl implements NetworkInfo {
   final Connectivity _connectivity;
-  final InternetConnectionChecker _connectionChecker;
 
   NetworkInfoImpl({
     Connectivity? connectivity,
-    InternetConnectionChecker? connectionChecker,
-  })  : _connectivity = connectivity ?? Connectivity(),
-        _connectionChecker =
-            connectionChecker ?? InternetConnectionChecker.instance;
+  }) : _connectivity = connectivity ?? Connectivity();
 
   @override
   Future<bool> get isConnected async {
-    final connectivityResult = await _connectivity.checkConnectivity();
-
-    // If no connectivity, return false immediately
-    if (connectivityResult == ConnectivityResult.none) {
-      return false;
+    // On web, we can't reliably check internet connectivity without CORS issues
+    // The connectivity_plus package uses Navigator.onLine on web which is sufficient
+    // If the actual API call fails, it will throw an appropriate error
+    if (kIsWeb) {
+      final connectivityResult = await _connectivity.checkConnectivity();
+      // On web, connectivity_plus uses Navigator.onLine
+      return connectivityResult != ConnectivityResult.none;
     }
 
-    // Check if there's actual internet connection
-    return await _connectionChecker.hasConnection;
+    // On mobile/desktop, use connectivity_plus
+    final connectivityResult = await _connectivity.checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
   }
 
   @override
   Stream<bool> get onConnectivityChanged {
     return _connectivity.onConnectivityChanged.asyncMap((result) async {
-      if (result == ConnectivityResult.none) {
-        return false;
-      }
-      return await _connectionChecker.hasConnection;
+      return result != ConnectivityResult.none;
     });
   }
 }
